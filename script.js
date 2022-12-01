@@ -1,3 +1,13 @@
+let playerState = 'idle';
+
+const dropdown  = document.getElementById('animations');
+
+dropdown.addEventListener('change', function(e){
+
+    playerState = e.target.value;
+
+})
+
 const canvas  = document.getElementById('canvas1');
 
 const ctx = canvas.getContext('2d');
@@ -22,7 +32,7 @@ const spriteHeight = 523;
 let gameFrame = 0;
 const staggerFrame = 3; 
 
-let playerState = 'idle';
+
 
 //this is all the animations for which the data we want to be created
 const animationStates = [
