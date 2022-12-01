@@ -13,7 +13,7 @@ playerImage.src = 'shadow_dog.png';
 const spriteWidth = 575;
 const spriteHeight = 523;
 
-//thing of htese as the row and column of a matrix 
+//think of these as the row and column of a matrix 
 let frameX = 0;//the coordinate x axis //this is not the row but the column
 let frameY = 0;//the coordinate y axis //this is not the col but the row 
 
