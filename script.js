@@ -18,25 +18,39 @@ let frameX = 0;//the coordinate x axis //this is not the row but the column
 let frameY = 0;//the coordinate y axis //this is not the col but the row 
 
 let gameFrame = 0;
-const staggerFrame = 4; 
+const staggerFrame = 1; 
 
 function  animate(){
+
     ctx.clearRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
     // ctx.fillRect(100,50,100,100);
     // x++;
     // ctx.drawImage(playerImage, 0, 0);
 
     //from where we want to cut from the sprite image //and where do we want to place it in our canvas
-    ctx.drawImage(playerImage, frameX*spriteWidth, frameY*spriteHeight, spriteWidth, spriteHeight, 0,0, spriteWidth, spriteHeight);
+    
 
-    if(gameFrame%staggerFrame == 0){
-         if(frameX < 6){
-            frameX++;
-        }else{
-            frameX = 0;
-        }
-        gameFrame = 0;
-    }
+    // if(gameFrame%staggerFrame == 0){//the old method 
+    //      if(frameX < 6){
+    //         frameX++;
+    //     }else{
+    //         frameX = 0;
+    //     }
+    //     gameFrame = 0;
+    // }
+
+    //now we wll use more advance method to do the same task //using the gane frame and stagerring frame
+    //this is for the horizontal positioning 
+
+
+    let position  = Math.floor(gameFrame/staggerFrame)%6;//staggeringFrame is to slow down the individual count 
+    //and modulo is to bring it back to the starting horizontal position 
+
+    frameX = spriteWidth*position;
+
+
+    ctx.drawImage(playerImage, frameX, frameY*spriteHeight, spriteWidth, spriteHeight, 0,0, spriteWidth, spriteHeight);
+
 
     gameFrame++;
 
