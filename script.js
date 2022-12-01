@@ -13,6 +13,10 @@ playerImage.src = 'shadow_dog.png';
 const spriteWidth = 575;
 const spriteHeight = 523;
 
+//thing of htese as the row and column of a matrix 
+let frameX = 0;//the coordinate x axis //this is not the row but the column
+let frameY = 0;//the coordinate y axis //this is not the col but the row 
+
 function  animate(){
     ctx.clearRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
     // ctx.fillRect(100,50,100,100);
@@ -20,7 +24,13 @@ function  animate(){
     // ctx.drawImage(playerImage, 0, 0);
 
     //from where we want to cut from the sprite image //and where do we want to place it in our canvas
-    ctx.drawImage(playerImage, 0, 0, spriteWidth, spriteHeight, 0,0, spriteWidth, spriteHeight);
+    ctx.drawImage(playerImage, frameX*spriteWidth, frameY*spriteHeight, spriteWidth, spriteHeight, 0,0, spriteWidth, spriteHeight);
+
+    if(frameX < 6){
+        frameX++;
+    }else{
+        frameX = 0;
+    }
 
     requestAnimationFrame(animate);
 }
