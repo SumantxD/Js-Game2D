@@ -8,8 +8,22 @@
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <canvas id="canvas1"></canvas>
-    <div class="controls">
+    <!-- now to easily change scrool speed -->
+    
+    <div id="container">
+        <canvas id="canvas1"></canvas>
+        <p>
+            Game speed:
+            <spam id="showGameSpeed">
+
+            </spam>
+        </p>
+        <!-- <p>GameSpeed</p> -->
+        <!-- <p>GameSpeed</p> -->
+        <input type="range" min="0" max="20" value="5" class="slider" id="slider">
+    </div>
+
+    <!-- <div class="controls">
         <label for="animations">Choose Animations</label>
         <select id="animations" name = "animations">
             <option value="idle">Idle</option>
@@ -20,10 +34,10 @@
             <option value="sit">Sit</option>
             <option value="roll">Roll</option>
             <option value="bite">Bite</option>
-            <!-- <option value="ko">KO</option> -->
+            #<option value="ko">KO</option> 
             <option value="getHit">Getting Hit</option>
         </select>
-    </div>
+    </div> -->
     <script src="script.js"></script>
 </body>
 </html>
