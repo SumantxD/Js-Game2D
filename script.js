@@ -16,6 +16,8 @@ const ctx = canvas.getContext('2d');
 const CANVAS_WIDTH = canvas.width = 800;
 const CANVAS_HEIGHT = canvas.height = 700;
 
+let gameFrame = 0;//this we will use to slow down the animation 
+
 
 //we will create a variable enemy1 and assign it to an object 
 //an object is like a map in js
@@ -29,39 +31,188 @@ const CANVAS_HEIGHT = canvas.height = 700;
 
 //we will use class to create enemy
 
+const noOfEnemies = 100;//we will have 100 enemeis instanciated
+const enemiesArray = [];//this will store all the enemies //initially it is empty we will fill it using the for loop 
+
+const enemyImage = new Image();
+enemyImage.src = 'enemy/enemy1.png';
+
 class Enemy {
     constructor(){
-        this.x = 10;
-        this.y = 10;
-        this.height = 20;
-        this.width = 20; 
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.spriteWidth = 293;//this can be calculated using the widht of the image divided by the no of sprites
+        this.spriteHeight = 155;
+        //the above are the original dimentions of the sprite image 
+        //we will keep the rendered box size relative to the spreiteWidht and spriteHeight to preserve the aspect ratio
+
+
+
+        this.height = this.spriteHeight/2.5;
+        this.width = this.spriteWidth/2.5; 
+        this.speed = Math.random()*4 -2;//this will generate a random no from -2 to +2
+
+        this.frame = 0;//this will keep trach of wich frame we want to currently display
     }
 
     //we will create the update method for the enemy movement
     update(){
-        this.x++;
-        this.y++;
+        this.x += this.speed;
+        this.y += this.speed;
+
+        if(gameFrame%2 === 0){
+
+            this.frame > 4 ? this.frame = 0 : this.frame++;
+            gameFrame = 0; 
+        }
+
+        //we want the frames to cycle
+
     }
     //the draw method will be assigned to each enemy so that we don't have to call it over again for each enemy
     draw(){
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        // ctx.drawImage(enemyImage, this.x, this.y); //we can add the additional width and the height property which will scale the image into the small box 
+        // ctx.drawImage(enemyImage, this.x, this.y, this.width, this.height); //but we don't really wnat that we wnat to corp out one farame at a time 
+        // and we want to jump to the right by the amount of the individual sprite width to the right //to the amout of frame
+        ctx.drawImage(enemyImage,this.frame*this.spriteWidth, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);//we will add additional 4 arguments to tell it that what are we want to crop out from the image 
+        //the image we want to dray //4-> which part of the image we want to crop //4-> where we want to place the cropped image on the canvas
+        //we wnat to move frame by frame untill the last one and then jump back to the last one 
+
     }
 };
 
-const enemy1 = new Enemy();
+//we will create the total no of enemy using a for loop equal to the no of enemeies
 
-function animate(){
+// const enemy1 = new Enemy();
+for(let i=0; i<noOfEnemies; i++){//this will create 100 enemies using the enemy class constructor
+    enemiesArray.push(new Enemy());
+}
+
+//now time to add some real enemy using sprites
+
+// const enemyRaven = new Image();
+// enemyRaven.src = 'enemy_raven.png';
+
+//we will be making ravens from here
+let ravens = [];
+
+class Raven{//this will create all teh animated ravens
+    constructor(){
+        this.spriteWidth = 271;
+        this.spriteHeight = 194;
+
+        //we will keep the width and height of our spriteSheet relative to our sprite dimention to preserve the aspect ratio
+        this.sizeModifier =  Math.random()*0.6 + 0.4;//we will have a value from 0.4 to 1
+        this.width = this.spriteWidth*this.sizeModifier;
+        this.height = this.spriteHeight*this.sizeModifier;
+        this.x = canvas.width;//so that can fly to the left after creation
+        this.y = (Math.random() * CANVAS_HEIGHT) - this.height;//we will make them randomly instanciate //-this.height so that the raven will not fall out of frame when we instanciate
+        this.directionX = Math.random()*5 + 3;//the horizontal speed will be between 3 and 8 
+        //we want the ravens to move up and down 
+        this.directionY = Math.random() * 5 -2.5; 
+        this.markForDeletion = false;
+        this.image = new Image();
+        this.image.src = 'enemy_raven.png';
+
+        this.frame = 0;//the current frame that we are showing
+        this.maxFrame = 4;//
+
+        this.timeSinceFlap = 0;//this will accumulate the time //then we will make it cycle back to 0
+        this.flapInterval = Math.random()*50 + 50;
+        
+    }
+    update(deltaTime){//to update the position of the raven and render it in it's new position 
+        this.x -= this.directionX;
+        if(this.x < 0-this.width){
+            this.markForDeletion = true;
+        }
+        // if(this.frame > this.maxFrame){
+        //     this.frame = 0;
+        // }else{
+        //     this.frame ++;
+        // }
+
+        this.timeSinceFlap += deltaTime;
+
+        if(this.timeSinceFlap >= this.flapInterval){//time to change the frame
+            if(this.frame  > this.maxFrame) this.frame = 0;
+            else this.frame++;
+            this.timeSinceFlap = 0;
+        }
+
+    }
+    //draw method will take these updated value 
+    draw(){
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        ctx.drawImage(this.image, this.frame * this.spriteWidth, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);
+    }
+};
+
+// const raven = new Raven();//we created a new raven object
+
+let timeToNextRaven = 0;//will accumulate the time in ms values between frames untill it reaches a certain value
+let ravenInterval = 500;//the will be the maximum accumulation value 
+let lastTimer = 0;
+
+function animate(timestamp){//by defalult js passes timestamp to requestAnimationFrame() as an argument //RAF passes it's callback function "animate in this case" automatic timestamps in miliseconds
     //we also have to delete the old paint
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    //animating the ravens
+
+    //we will calculate the delta tme 
+    let deltaTime = timestamp - lastTimer;
+
+    lastTimer = timestamp;
+
+    timeToNextRaven += deltaTime;
+
+    if(timeToNextRaven >= ravenInterval){//time to create a new raven 
+        timeToNextRaven = 0;
+        //time to create a new raven 
+        ravens.push(new Raven());
+    }
+    // [] //we can create something called array literal by dropping square bracket like that
+    [...ravens].forEach(object => object.update(deltaTime));
+    [...ravens].forEach(object => object.draw());
+
+    ravens = ravens.filter(object => !object.markForDeletion);
+
+    // console.log(ravens.length)
+    //now we need to remove all the ravens that moved past the screen area
+    //for that we will create new class property called marked for deletion and we will set it to false initially
+
+    // raven.update();
+    // raven.draw();
+
+    //how to create a new raven periodically 
+    //and we want to make sure that the periodic event is trigerred at the same interval on fast as well as slow systems
+    //we will use time in miliseconds not in no of frames //for that we will be using timestamps
+
+    //we will take tiem from the current loop save that value run the loop again with a new time stamp value and compare them to see how many miliseconds have been passed
+
+
     // enemy1.x++;
     // enemy1.y++;
-    enemy1.update();
-    enemy1.draw();
+    // enemy1.update();
+    // enemy1.draw();
+
+    //now for each frame we will loop through the enemies array and call the update and buidl mentod
+
+    // enemiesArray.forEach(enemy => {//this will reffer to each individual object as enemy //as we cycle through the enemies array 
+    //     //for each enemy we will call theri associated update and draw method 
+    //     enemy.update();
+    //     enemy.draw();
+    // });
+
+    gameFrame++;
+
     // ctx.fillRect(enemy1.x, enemy1.y, enemy1.width, enemy1.height);
     requestAnimationFrame(animate);
 }
 
-animate();
+animate(0);
 
 /* //the below code is for the sprite animation and teh parallax effect of background
 
