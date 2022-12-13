@@ -9,7 +9,7 @@
 
 #canvas1{
     border: 5px solid black;
-    position: relative;
+    position: absolute;
     /* top: 50%; */
     /* left: 50%; */
     /* transform: translate(-50%, -50%); */
@@ -35,4 +35,11 @@
 
 p{
     color: rgb(18, 14, 14);
+}
+
+#collisionCanvas{
+    position: absolute;
+    z-index: -1;
+    background: red;
+    opacity: 1;
 }

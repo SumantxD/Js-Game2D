@@ -16,6 +16,11 @@ const ctx = canvas.getContext('2d');
 const CANVAS_WIDTH = canvas.width = 800;
 const CANVAS_HEIGHT = canvas.height = 700;
 
+const collisionCanvas  = document.getElementById('collisionCanvas');
+const collisionCtx = collisionCanvas.getContext('2d');
+collisionCanvas.width = 806;
+collisionCanvas.height = 706;
+
 let gameFrame = 0;//this we will use to slow down the animation 
 
 
@@ -94,6 +99,8 @@ for(let i=0; i<noOfEnemies; i++){//this will create 100 enemies using the enemy 
 // const enemyRaven = new Image();
 // enemyRaven.src = 'enemy_raven.png';
 
+
+
 //we will be making ravens from here
 let ravens = [];
 
@@ -121,9 +128,18 @@ class Raven{//this will create all teh animated ravens
         this.timeSinceFlap = 0;//this will accumulate the time //then we will make it cycle back to 0
         this.flapInterval = Math.random()*50 + 50;
         
+        //to assign this raven a random color
+        this.randonColor = [Math.floor(Math.random()*255), Math.floor(Math.random()*255), Math.floor(Math.random()*255)];//this will give three random RGB value to each raven object on creation 
+        this.color = 'rgb(' + this.randonColor[0] + ',' + this.randonColor[1] + ',' + this.randonColor[2] + ')';
+
     }
     update(deltaTime){//to update the position of the raven and render it in it's new position 
         this.x -= this.directionX;
+        this.y += this.directionY;//to move it up or down randonmy while going from left to right
+        //for bounding back when hitting top or down boundary
+        if(this.y < 0 || this.y > canvas.height - this.height){
+            this.directionY = this.directionY * -1;
+        }
         if(this.x < 0-this.width){
             this.markForDeletion = true;
         }
@@ -144,7 +160,8 @@ class Raven{//this will create all teh animated ravens
     }
     //draw method will take these updated value 
     draw(){
-        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        collisionCtx.fillStyle = this.color;
+        collisionCtx.fillRect(this.x, this.y, this.width, this.height);
         ctx.drawImage(this.image, this.frame * this.spriteWidth, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);
     }
 };
@@ -154,6 +171,27 @@ class Raven{//this will create all teh animated ravens
 let timeToNextRaven = 0;//will accumulate the time in ms values between frames untill it reaches a certain value
 let ravenInterval = 500;//the will be the maximum accumulation value 
 let lastTimer = 0;
+
+ctx.font = "50px Impact";
+
+let score = 0;//variable to mentain the current score
+
+function drawScore(){
+    ctx.fillStyle = "black";
+    ctx.fillText("Score: " + score, 50, 75);
+}
+
+//now time to kill some ravens //we create an event listner for the click event 
+window.addEventListener('click', function(e){//we will do colision detection by color
+    const detectPixelColor = ctx.getImageData(e.x, e.y, 1, 1);//the built in getImageDate method will return the color of the coordinate
+    //we want to a scan an area of width and heigh of 1px
+    console.log(detectPixelColor);
+    //in some browserw we won't be able to call getImageData on the same canvas where we are drawing images //it will give an error
+    //the error is for security purpose to prevent the canvas from being tainted from cross origin data
+
+    //first we will assign differently coloured hitbox to each raven //for that we will create a seperate canvas which has only there hitboxes and no ravens
+    //because when we click it we want to get color of that particular hitbox not of the black raven
+})
 
 function animate(timestamp){//by defalult js passes timestamp to requestAnimationFrame() as an argument //RAF passes it's callback function "animate in this case" automatic timestamps in miliseconds
     //we also have to delete the old paint
@@ -172,7 +210,12 @@ function animate(timestamp){//by defalult js passes timestamp to requestAnimatio
         timeToNextRaven = 0;
         //time to create a new raven 
         ravens.push(new Raven());
+        //we will sort the raven so that the smmller ones appear in the back of the big ones
+        ravens.sort(function(a,b){
+            return a.width - b.width;
+        })
     }
+    drawScore();
     // [] //we can create something called array literal by dropping square bracket like that
     [...ravens].forEach(object => object.update(deltaTime));
     [...ravens].forEach(object => object.draw());
