@@ -100,7 +100,7 @@ for(let i=0; i<noOfEnemies; i++){//this will create 100 enemies using the enemy 
 // const enemyRaven = new Image();
 // enemyRaven.src = 'enemy_raven.png';
 
-let life = 10;
+let life = 30;
 
 //we will be making ravens from here
 let ravens = [];
@@ -261,6 +261,10 @@ window.addEventListener('click', function(e){//we will do colision detection by 
     })
 })
 
+window.addEventListener('load', function(){
+
+
+
 function animate(timestamp){//by defalult js passes timestamp to requestAnimationFrame() as an argument //RAF passes it's callback function "animate in this case" automatic timestamps in miliseconds
     //we also have to delete the old paint
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -332,6 +336,8 @@ function animate(timestamp){//by defalult js passes timestamp to requestAnimatio
 }
 
 animate(0);
+
+});
 
 /* //the below code is for the sprite animation and teh parallax effect of background
 
