@@ -24,6 +24,7 @@ collisionCanvas.height = 706;
 let gameFrame = 0;//this we will use to slow down the animation 
 
 
+
 //we will create a variable enemy1 and assign it to an object 
 //an object is like a map in js
 
@@ -99,7 +100,7 @@ for(let i=0; i<noOfEnemies; i++){//this will create 100 enemies using the enemy 
 // const enemyRaven = new Image();
 // enemyRaven.src = 'enemy_raven.png';
 
-
+let life = 10;
 
 //we will be making ravens from here
 let ravens = [];
@@ -137,6 +138,13 @@ class Raven{//this will create all teh animated ravens
         this.x -= this.directionX;
         this.y += this.directionY;//to move it up or down randonmy while going from left to right
         //for bounding back when hitting top or down boundary
+
+        if(this.x < 0 - this.width){
+            if(life > 0){
+                life--;
+            }
+        }
+
         if(this.y < 0 || this.y > canvas.height - this.height){
             this.directionY = this.directionY * -1;
         }
@@ -176,14 +184,64 @@ ctx.font = "50px Impact";
 
 let score = 0;//variable to mentain the current score
 
+
 function drawScore(){
     ctx.fillStyle = "black";
     ctx.fillText("Score: " + score, 50, 75);
 }
 
+function drawLife(){
+    ctx.fillStyle = "black";
+    ctx.fillText("Life: " + life, 600, 75);
+}
+
+function drawGameOver(){
+    ctx.fillStyle = "red";
+    ctx.fillText("GAME OVER, your score is " + score, canvas.width/5, canvas.height/2);
+}
+
+//now time to add explosion on collision 
+let explosion = [];
+class Explosion{
+    constructor(x, y, size){
+        this.image = new Image();
+        this.image.src = 'effect.png';
+        this.spriteWidth = 200;
+        this.spriteHeight = 179;
+        this.size = size;
+        this.x = x;
+        this.y = y;
+        this.frame = 0;//the current frame of the sprite
+        this.sound = new Audio();
+        this.sound.src = 'boom.wav';
+
+        this.timeSinceFrame = 0;//this will accumulate time
+        this.frameInterval = 200;
+
+        this.markForDeletion = false;
+    }
+    update(deltaTime){
+        if(this.frame === 0){
+            this.sound.play();
+        }
+        this.timeSinceFrame += deltaTime;
+        if(this.timeSinceFrame >= this.frameInterval){
+            this.frame++;
+            this.timeSinceFrame = 0;
+            if(this.frame > 5){
+                this.markForDeletion = true;
+            }
+        }
+    }
+    draw(){
+        ctx.drawImage(this.image, this.frame * this.spriteWidth, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.size, this.size);
+        // ctx.drawImage(this.image, this.x, this.y, 100, 100);
+    }
+}
+
 //now time to kill some ravens //we create an event listner for the click event 
 window.addEventListener('click', function(e){//we will do colision detection by color
-    const detectPixelColor = ctx.getImageData(e.x, e.y, 1, 1);//the built in getImageDate method will return the color of the coordinate
+    const detectPixelColor = collisionCtx.getImageData(e.x, e.y, 1, 1);//the built in getImageDate method will return the color of the coordinate
     //we want to a scan an area of width and heigh of 1px
     console.log(detectPixelColor);
     //in some browserw we won't be able to call getImageData on the same canvas where we are drawing images //it will give an error
@@ -191,11 +249,22 @@ window.addEventListener('click', function(e){//we will do colision detection by 
 
     //first we will assign differently coloured hitbox to each raven //for that we will create a seperate canvas which has only there hitboxes and no ravens
     //because when we click it we want to get color of that particular hitbox not of the black raven
+    const pc = detectPixelColor.data;
+    ravens.forEach(object => {
+        if(object.randonColor[0] === pc[0] && object.randonColor[1] === pc[1] && object.randonColor[2] === pc[2]){
+            object.markForDeletion = true;
+            score++;
+            //now time to add new explosion to the active explosion array 
+            explosion.push(new Explosion(object.x, object.y, object.width))
+            console.log(explosion);
+        }
+    })
 })
 
 function animate(timestamp){//by defalult js passes timestamp to requestAnimationFrame() as an argument //RAF passes it's callback function "animate in this case" automatic timestamps in miliseconds
     //we also have to delete the old paint
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    collisionCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     //animating the ravens
 
@@ -216,9 +285,12 @@ function animate(timestamp){//by defalult js passes timestamp to requestAnimatio
         })
     }
     drawScore();
+    drawLife();
     // [] //we can create something called array literal by dropping square bracket like that
-    [...ravens].forEach(object => object.update(deltaTime));
-    [...ravens].forEach(object => object.draw());
+    [...ravens, ...explosion].forEach(object => object.update(deltaTime));
+    [...ravens, ...explosion].forEach(object => object.draw());
+
+    explosion = explosion.filter(object => !object.markForDeletion);
 
     ravens = ravens.filter(object => !object.markForDeletion);
 
@@ -252,7 +324,11 @@ function animate(timestamp){//by defalult js passes timestamp to requestAnimatio
     gameFrame++;
 
     // ctx.fillRect(enemy1.x, enemy1.y, enemy1.width, enemy1.height);
-    requestAnimationFrame(animate);
+    if(life){
+        requestAnimationFrame(animate);
+    }else{
+        drawGameOver();
+    }
 }
 
 animate(0);
